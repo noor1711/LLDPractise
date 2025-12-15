@@ -13,6 +13,7 @@ class ParkingSpot(ABC):
     def __init__(self):
         super().__init__()
         self._isAvailable = True
+        self._vehicle: Vehicle.Vehicle | None = None
 
     @property
     def size(self) -> PARKING_SPOT_SIZE:
@@ -31,7 +32,7 @@ class ParkingSpot(ABC):
         self._isAvailable = value
     
     @property
-    def vehicle(self) -> Vehicle:
+    def vehicle(self) -> Vehicle.Vehicle | None:
         return self._vehicle
 
     @vehicle.setter

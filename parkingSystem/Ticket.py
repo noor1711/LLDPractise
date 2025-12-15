@@ -1,11 +1,13 @@
-from abc import ABC
 from random import randint
-class Ticket(ABC):
+from typing import Optional
 
+
+class Ticket:
     def __init__(self, vehicle, spot, entryTime):
         self._vehicle = vehicle
         self._spot = spot
         self.entryTime = entryTime
+        self._exitTime: Optional[object] = None
         self.id = randint(0, 10000000)
 
     @property
@@ -36,8 +38,6 @@ class Ticket(ABC):
     def exitTime(self):
         return self._exitTime
     
-    @entryTime.setter
+    @exitTime.setter
     def exitTime(self, time):
         self._exitTime = time
-    
-    
