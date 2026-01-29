@@ -1,1 +1,3 @@
 prod_Tsi34G0TiBabqj : price_1Suwd2EbvYqbUGYcuiSIKdj4
+prod_TsiUmpb4iVVfPg : price_1Sux3BEbvYqbUGYcsBWBwM3Z
+prod_TsiUp3CTKhOEwq : price_1Sux3fEbvYqbUGYcvQuMj3Gn
