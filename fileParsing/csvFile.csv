@@ -1,0 +1,6 @@
+id,full_name,department,hire_date,salary,remote
+101,Alice Johnson,Engineering,2023-05-14,95000,True
+102,Bob Smith,Marketing,2022-11-01,72000,False
+103,Charlie Davis,Product,2024-01-10,88000,True
+104,Diana Prince,Engineering,2021-03-25,105000,False
+105,Edward Norton,Sales,2023-08-19,65000,True
