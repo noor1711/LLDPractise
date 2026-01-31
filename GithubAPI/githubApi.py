@@ -4,6 +4,7 @@ from requests.auth import AuthBase
 from datetime import date, timedelta, datetime
 import os
 from dotenv import load_dotenv
+from uuid import uuid4
 
 load_dotenv()
 
@@ -11,9 +12,11 @@ GITHUB_KEY=os.getenv("GITHUB_API_KEY")
 class TokenAuth(AuthBase):
     def __init__(self, token):
         self._token = token
+        self._idempotency_key = uuid4()
     
     def __call__(self, request: requests.Request):
         request.headers["Authorization"] = f'Bearer {self._token}'
+        request.headers["Idempotency-Key"] = self._idempotency_key
         return request
 
 response = requests.get("https://api.github.com/events", params={"per_page": 10, "page": 1})
