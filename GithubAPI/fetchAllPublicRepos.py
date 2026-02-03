@@ -3,9 +3,9 @@ import aiohttp
 import random
 
 sema = asyncio.BoundedSemaphore(5)
-async def get_page(session, page_no):
+async def get_page(org, session, page_no):
     """Worker function to fetch a single page."""
-    url = f"https://api.github.com/orgs/stripe/repos?per_page=10&page={page_no}"
+    url = f"https://api.github.com/orgs/{org}/repos?per_page=10&page={page_no}"
     
     # Introduce jitter to avoid 'thundering herd' on the API
     await asyncio.sleep(random.uniform(0.5, 1.5)) 
@@ -24,11 +24,11 @@ async def get_page(session, page_no):
         print(f"Error on page {page_no}: {e}")
         return []
 
-async def fetch_all_repos(limit=5):
+async def fetch_all_repos(org, limit=5):
     # Use ONE session for the entire lifecycle
     async with aiohttp.ClientSession() as session:
         # Create a list of tasks (we want pages 1 through limit)
-        tasks = [get_page(session, page) for page in range(1, limit + 1)]
+        tasks = [get_page(org, session, page) for page in range(1, limit + 1)]
         
         # Run them all concurrently
         pages_data = await asyncio.gather(*tasks)
@@ -43,3 +43,4 @@ if __name__ == "__main__":
     from pprint import pprint
     result = asyncio.run(fetch_all_repos(limit=3))
     pprint(result)
+
