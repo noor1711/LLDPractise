@@ -1,10 +1,13 @@
 import json
 from pprint import pprint
 
-with open("./jsonFile.json", "r") as file:
+with open("./jsonFile.json", "r+") as file:
     content = json.load(file)
     print(content)
     pprint(content)
+    file.seek(0)
+    with open("./jsonWriteFile.json", "w+") as writeFile:
+        json.dump(content, writeFile, indent=4)
 try:
     with open("./notValid.json", "r") as file:
         content = json.load(file)
