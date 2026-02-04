@@ -2,9 +2,6 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from requests.exceptions import RetryError
-from functools import reduce
-from functools import lru_cache
-
 class PricingService:
     def __init__(self):
         self.base_fee = 2000
