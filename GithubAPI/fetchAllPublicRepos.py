@@ -1,46 +1,58 @@
+import time
 import asyncio
 import aiohttp
-import random
+import os
+from dotenv import load_dotenv
 
-sema = asyncio.BoundedSemaphore(5)
-async def get_page(org, session, page_no):
-    """Worker function to fetch a single page."""
-    url = f"https://api.github.com/orgs/{org}/repos?per_page=10&page={page_no}"
-    
-    # Introduce jitter to avoid 'thundering herd' on the API
-    await asyncio.sleep(random.uniform(0.5, 1.5)) 
+load_dotenv()
+GITHUB_KEY = os.getenv("GITHUB_API_KEY")
+
+class Github_Client:
+    def __init__(self, API_KEY):
+        self._key = API_KEY
+        self.url = "https://api.github.com"
+        # We define the placeholder, but don't initialize the loop-bound object here
+        self.semaphore = None
+
+    async def fetch_page(self, org, page_no, session):
+        target_url = f"{self.url}/orgs/{org}/repos"
+        
+        start = time.perf_counter()
+        
+        # Guard: Use the semaphore to limit concurrency
+        async with self.semaphore:
+            async with session.get(
+                url=target_url, 
+                params={"per_page": 10, "page": page_no}
+            ) as response:
+                data = await response.json() 
+                print(f"Page {page_no} | Status: {response.status} | Time: {time.perf_counter() - start:.4f}s")
+                return data
+        
+    async def fetch_all_pages(self):
+        # INITIALIZE PRIMITIVES HERE:
+        # Now we are inside the loop created by asyncio.run()
+        if self.semaphore is None:
+            self.semaphore = asyncio.BoundedSemaphore(2)
+
+        headers = {
+            "Authorization": f"Bearer {self._key}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        
+        async with aiohttp.ClientSession(headers=headers) as session:
+            tasks = [self.fetch_page("stripe", page, session) for page in range(1, 5)]
+            responses = await asyncio.gather(*tasks)
+            return responses
+
+if __name__ == "__main__":
+    client = Github_Client(GITHUB_KEY)
     
     try:
-        async with sema, session.get(url, timeout=10) as response:
-            if response.status == 403:
-                print(f"Rate limited on page {page_no}")
-                return []
-            
-            response.raise_for_status()
-            # In aiohttp, .json() MUST be awaited
-            data = await response.json()
-            return [repo.get("description") for repo in data]
+        # This creates the main event loop
+        results = asyncio.run(client.fetch_all_pages())
+        print(f"Retrieved {len(results)} pages of data.")
     except Exception as e:
-        print(f"Error on page {page_no}: {e}")
-        return []
-
-async def fetch_all_repos(org, limit=5):
-    # Use ONE session for the entire lifecycle
-    async with aiohttp.ClientSession() as session:
-        # Create a list of tasks (we want pages 1 through limit)
-        tasks = [get_page(org, session, page) for page in range(1, limit + 1)]
-        
-        # Run them all concurrently
-        pages_data = await asyncio.gather(*tasks)
-        
-        # Flatten the list of lists
-        all_repos = [desc for page in pages_data for desc in page]
-        
-    return {"repos": all_repos, "count": len(all_repos)}, 200
-
-# To run the async function:
-if __name__ == "__main__":
-    from pprint import pprint
-    result = asyncio.run(fetch_all_repos(limit=3))
-    pprint(result)
-
+        # This will now give you a full traceback if it fails
+        import traceback
+        traceback.print_exc()
